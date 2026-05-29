@@ -21,7 +21,7 @@ export default function ParameterSlider({
   const [inputVal, setInputVal] = useState('')
 
   // sigma/gamma ditampilkan sebagai "5 hr" (hari), bukan nilai aslinya (0.2)
-  const isInverse   = display.endsWith(' hr')
+  const isInverse   = display.endsWith(' days')
   const editInitial = isInverse ? String(Math.round(1 / value)) : display
 
   const startEdit = () => {
@@ -59,7 +59,7 @@ export default function ParameterSlider({
             onChange={e => setInputVal(e.target.value)}
             onBlur={commitEdit}
             onKeyDown={handleKeyDown}
-            className="font-(family-name:--font-jetbrains-mono) text-[12px] font-semibold text-(--accent) bg-(--bg) px-2 py-0.5 rounded w-16 text-center border border-(--accent) outline-none"
+            className="font-(family-name:--font-jetbrains-mono) text-[12px] font-semibold text-(--accent) bg-(--bg) px-2 py-0.5 rounded w-16 text-center border border-(--accent) outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [appearance:textfield]"
           />
         ) : (
           <span
