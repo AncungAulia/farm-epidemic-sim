@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { BookOpen } from 'lucide-react'
@@ -15,6 +15,15 @@ const NAV = [
 export default function Navbar() {
   const pathname = usePathname()
   const [guideOpen, setGuideOpen] = useState(false)
+
+  useEffect(() => {
+    if (!localStorage.getItem('fes-guide-seen')) setGuideOpen(true)
+  }, [])
+
+  const handleGuideClose = () => {
+    localStorage.setItem('fes-guide-seen', '1')
+    setGuideOpen(false)
+  }
 
   return (
     <>
@@ -53,7 +62,7 @@ export default function Navbar() {
         </div>
       </nav>
 
-      <HowToSimulate open={guideOpen} onClose={() => setGuideOpen(false)} />
+      <HowToSimulate open={guideOpen} onClose={handleGuideClose} />
     </>
   )
 }
