@@ -2,11 +2,11 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Activity, BarChart2 } from 'lucide-react'
+import { Activity, Scale } from 'lucide-react'
 
 const NAV = [
-  { href: '/',        label: 'Simulation',  icon: Activity  },
-  { href: '/compare', label: 'Comparative', icon: BarChart2 },
+  { href: '/',        label: 'Simulate', icon: Activity },
+  { href: '/compare', label: 'Compare',  icon: Scale    },
 ]
 
 export default function BottomNav() {
