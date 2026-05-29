@@ -254,7 +254,11 @@ export default function SimBlock({
               params={params}
               running={simState !== "idle"}
               onChange={(key, val) =>
-                setParams((prev) => ({ ...prev, [key]: val }))
+                setParams((prev) => {
+                  const next = { ...prev, [key]: val }
+                  if (key === 'N' && next.I0 >= val) next.I0 = Math.max(1, val - 1)
+                  return next
+                })
               }
               maxN={COMPARE_MAX_AGENTS}
               animal={animal}

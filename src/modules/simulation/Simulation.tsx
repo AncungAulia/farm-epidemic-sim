@@ -139,7 +139,11 @@ export default function Simulation() {
         <ControlPanel
           params={params}
           running={simState !== 'idle'}
-          onChange={(k, v) => setParams(p => ({ ...p, [k]: v }))}
+          onChange={(k, v) => setParams(p => {
+            const next = { ...p, [k]: v }
+            if (k === 'N' && next.I0 >= v) next.I0 = Math.max(1, v - 1)
+            return next
+          })}
           animal={animal}
           onAnimalChange={setAnimal}
         />

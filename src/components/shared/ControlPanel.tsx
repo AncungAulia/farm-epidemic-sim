@@ -45,8 +45,8 @@ export default function ControlPanel({ params, running, onChange, mini = false, 
   const r0      = params.beta / params.gamma
   const r0Color = r0 > 1 ? 'var(--seir-i)' : 'var(--seir-r)'
   const r0Hint  = r0 >= 1
-    ? `1 infected → ~${Math.round(r0)} new cases`
-    : '1 infected → <1 new case'
+    ? <span>On average, each infectious animal will spread to approximately <span className="font-semibold text-(--text)">{Math.round(r0)}</span> others.</span>
+    : <span>On average, each infectious animal spreads to less than 1 other. The outbreak will fade.</span>
 
   return (
     <div className={`bg-(--card) border border-(--border) rounded-lg flex flex-col gap-3 ${mini ? 'p-3' : 'p-4'}`}>
@@ -62,7 +62,9 @@ export default function ControlPanel({ params, running, onChange, mini = false, 
       )}
       {SLIDERS.map(({ key, label, symbol }) => {
         const range  = PARAM_RANGES[key]
-        const max    = key === 'N' && maxN !== undefined ? maxN : range.max
+        const max    = key === 'N' && maxN !== undefined ? maxN
+                     : key === 'I0' ? Math.min(range.max, Math.max(1, params.N - 1))
+                     : range.max
         const locked = running && (key === 'N' || key === 'I0')
         return (
           <ParameterSlider
