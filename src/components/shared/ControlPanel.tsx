@@ -20,7 +20,7 @@ interface ControlPanelProps {
 function formatDisplay(key: keyof SimParams, value: number): string {
   if (key === 'N' || key === 'I0') return String(Math.round(value))
   if (key === 'beta') return value.toFixed(2)
-  return `${Math.round(1 / value)} hr`
+  return `${Math.round(1 / value)} days`
 }
 
 const SLIDERS: { key: keyof SimParams; label: string; symbol: string }[] = [
@@ -42,6 +42,12 @@ const PARAM_TOOLTIP = (
 )
 
 export default function ControlPanel({ params, running, onChange, mini = false, maxN, animal = 'sheep', onAnimalChange }: ControlPanelProps) {
+  const r0      = params.beta / params.gamma
+  const r0Color = r0 > 1 ? 'var(--seir-i)' : 'var(--seir-r)'
+  const r0Hint  = r0 >= 1
+    ? `1 infected → ~${Math.round(r0)} new cases`
+    : '1 infected → <1 new case'
+
   return (
     <div className={`bg-(--card) border border-(--border) rounded-lg flex flex-col gap-3 ${mini ? 'p-3' : 'p-4'}`}>
       {!mini && (
@@ -73,6 +79,17 @@ export default function ControlPanel({ params, running, onChange, mini = false, 
           />
         )
       })}
+
+      <div className="flex flex-col gap-0.5 pt-2 border-t border-(--border)">
+        <div className="flex items-baseline gap-1">
+          <span className="text-sm text-(--text)">R₀ =</span>
+          <span className="font-(family-name:--font-jetbrains-mono) text-sm font-bold" style={{ color: r0Color }}>
+            {r0.toFixed(2)}
+          </span>
+        </div>
+        <span className="text-[11px] text-(--muted)">{r0Hint}</span>
+      </div>
+
       {onAnimalChange && (
         <>
           <div className="flex items-center justify-between border-b border-(--border) pb-2 mt-1">
