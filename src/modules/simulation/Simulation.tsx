@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { Play, Pause, Square, Check } from 'lucide-react'
+import { Play, Pause, Square } from 'lucide-react'
 import SimulationCanvas from '@/src/components/shared/SimulationCanvas'
 import ControlPanel     from '@/src/components/shared/ControlPanel'
 import StatusBar        from '@/src/components/elements/StatusBar'
@@ -26,11 +26,12 @@ export default function Simulation() {
   const [day, setDay]             = useState(0)
   const [counts, setCounts]       = useState<{ S: number; E: number; I: number; R: number }>({ S: DEFAULT_PARAMS.N - DEFAULT_PARAMS.I0, E: 0, I: DEFAULT_PARAMS.I0, R: 0 })
   const [chartData, setChartData] = useState<SEIRSnapshot[]>([])
-  const [toast, setToast]         = useState<string | null>(null)
+  const [endStats, setEndStats]   = useState<{ day: number; attackRate: number; peakI: number } | null>(null)
 
   const agentsRef   = useRef<Agent[]>([])
   const frameRef    = useRef(0)
   const dayRef      = useRef(0)
+  const peakIRef    = useRef(0)
   const simStateRef = useRef<SimState>('idle')
   const speedRef    = useRef<Speed>(1)
   const paramsRef   = useRef<SimParams>(DEFAULT_PARAMS)
@@ -39,11 +40,6 @@ export default function Simulation() {
   simStateRef.current = simState
   speedRef.current    = speed
   paramsRef.current   = params
-
-  const showToast = (msg: string) => {
-    setToast(msg)
-    setTimeout(() => setToast(null), 4000)
-  }
 
   const loop = useCallback(() => {
     if (simStateRef.current !== 'running') return
@@ -61,13 +57,18 @@ export default function Simulation() {
 
       dayRef.current++
       const c = countSEIR(agentsRef.current)
+      if (c.I > peakIRef.current) peakIRef.current = c.I
       setCounts(c)
       setDay(dayRef.current)
       setChartData(prev => [...prev, { day: dayRef.current, ...c }])
 
       if (isOutbreakOver(agentsRef.current)) {
+        setEndStats({
+          day:        dayRef.current,
+          attackRate: Math.round((c.R / paramsRef.current.N) * 100),
+          peakI:      peakIRef.current,
+        })
         setSimState('idle')
-        showToast(`Outbreak ended on day ${dayRef.current}`)
         return
       }
     }
@@ -86,6 +87,8 @@ export default function Simulation() {
     agentsRef.current = initAgents(params, CANVAS_WIDTH, CANVAS_HEIGHT)
     frameRef.current  = 0
     dayRef.current    = 0
+    peakIRef.current  = params.I0
+    setEndStats(null)
     setDay(0)
     setChartData([{ day: 0, ...countSEIR(agentsRef.current) }])
     setCounts(countSEIR(agentsRef.current))
@@ -99,6 +102,7 @@ export default function Simulation() {
     cancelAnimationFrame(rafRef.current)
     agentsRef.current = []
     dayRef.current    = 0
+    setEndStats(null)
     setSimState('idle')
     setDay(0)
     setChartData([])
@@ -113,7 +117,7 @@ export default function Simulation() {
     <main className="container mx-auto px-4 md:px-6 py-4 flex flex-col gap-3 max-w-310">
 
       <div className="mb-2">
-        <h1 className="text-xl font-bold text-(--text)">Simulation</h1>
+        <h1 className="text-xl font-bold text-(--text)">Simulate</h1>
         <p className="text-sm text-(--muted) mt-1">
           Run a stochastic SEIR simulation and observe how an epidemic spreads through a closed farm population.
         </p>
@@ -128,6 +132,9 @@ export default function Simulation() {
           canvasHeight={CANVAS_HEIGHT}
           dayRef={dayRef}
           animal={animal}
+          simState={simState}
+          endStats={endStats}
+          onClear={handleStop}
         />
         <ControlPanel
           params={params}
@@ -159,11 +166,6 @@ export default function Simulation() {
 
       <SEIRChart data={chartData} />
 
-      {toast && (
-        <div className="fixed bottom-6 right-6 bg-(--panel) border border-(--border) text-(--text) text-sm px-4 py-3 rounded-lg shadow-lg font-(family-name:--font-jetbrains-mono) z-50">
-          <Check size={14} /> {toast}
-        </div>
-      )}
     </main>
   )
 }

@@ -3,6 +3,13 @@
 import { useRef, useEffect, useCallback, memo } from 'react'
 import type { Agent } from '@/src/utils/agent'
 import { SPRITE, SEIR_COLORS, DIRECTION, ANIMAL_CONFIGS, type AnimalType } from '@/src/utils/constants'
+import Button from '@/src/components/elements/Button'
+
+interface EndStats {
+  day:        number
+  attackRate: number
+  peakI:      number
+}
 
 interface SimulationCanvasProps {
   agentsRef:    React.RefObject<Agent[]>
@@ -10,6 +17,9 @@ interface SimulationCanvasProps {
   canvasHeight: number
   dayRef:       React.RefObject<number>
   animal?:      AnimalType
+  simState?:    'idle' | 'running' | 'paused'
+  endStats?:    EndStats | null
+  onClear?:     () => void
 }
 
 function loadImage(src: string): Promise<HTMLImageElement> {
@@ -29,7 +39,7 @@ function hexToRgb(hex: string): [number, number, number] {
   ]
 }
 
-function SimulationCanvas({ agentsRef, canvasWidth, canvasHeight, dayRef, animal = 'sheep' }: SimulationCanvasProps) {
+function SimulationCanvas({ agentsRef, canvasWidth, canvasHeight, dayRef, animal = 'sheep', simState, endStats, onClear }: SimulationCanvasProps) {
   const canvasRef  = useRef<HTMLCanvasElement>(null)
   const sheetRef   = useRef<HTMLImageElement | null>(null)
   const grassRef   = useRef<HTMLImageElement | null>(null)
@@ -145,6 +155,53 @@ function SimulationCanvas({ agentsRef, canvasWidth, canvasHeight, dayRef, animal
         height={canvasHeight}
         className="w-full h-full block"
       />
+
+      {simState === 'paused' && (
+        <div
+          className="absolute inset-0 flex flex-col items-center justify-center gap-1"
+          style={{ background: 'rgba(13,17,23,0.72)' }}
+        >
+          <span className="font-(family-name:--font-jetbrains-mono) text-base font-bold tracking-widest text-(--accent)">
+            ⏸ PAUSED
+          </span>
+        </div>
+      )}
+
+      {simState === 'idle' && endStats && (
+        <div
+          className="absolute inset-0 flex flex-col items-center justify-center gap-4"
+          style={{ background: 'rgba(13,17,23,0.82)' }}
+        >
+          <div className="flex flex-col items-center gap-1">
+            <span className="font-bold text-base tracking-wide" style={{ color: 'var(--accent)' }}>
+              Simulation Ended
+            </span>
+            <span className="font-(family-name:--font-jetbrains-mono) text-xs text-(--muted)">
+              Day {endStats.day}
+            </span>
+          </div>
+
+          <div className="flex gap-6 font-(family-name:--font-jetbrains-mono) text-xs">
+            <div className="flex flex-col items-center gap-0.5">
+              <span className="uppercase tracking-widest text-[10px] text-(--muted)">Attack Rate</span>
+              <span className="text-sm font-bold" style={{ color: 'var(--seir-i)' }}>
+                {endStats.attackRate}%
+              </span>
+            </div>
+            <div className="w-px bg-(--border)" />
+            <div className="flex flex-col items-center gap-0.5">
+              <span className="uppercase tracking-widest text-[10px] text-(--muted)">Peak Infectious</span>
+              <span className="text-sm font-bold" style={{ color: 'var(--seir-i)' }}>
+                {endStats.peakI}
+              </span>
+            </div>
+          </div>
+
+          {onClear && (
+            <Button variant="outline" onClick={onClear}>Clear</Button>
+          )}
+        </div>
+      )}
     </div>
   )
 }
