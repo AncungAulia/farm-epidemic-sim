@@ -40,7 +40,7 @@ The simulation ends when **E = 0 AND I = 0** — the outbreak is truly over only
 | Parameter | Symbol | Default | Range | Description |
 |-----------|--------|---------|-------|-------------|
 | Total Population | N | 200 | 50–500 | Number of animals in the closed farm |
-| Initial Cases | I₀ | 3 | 1–20 | Animals that start as Infectious on day 0 |
+| Initial Cases | I₀ | 3 | 1–100 | Animals that start as Infectious on day 0 |
 | Transmission | β | 0.30 | 0–1 | Probability of transmission per contact per day |
 | Incubation | 1/σ | 5 days | 1–14 days | Average incubation period (E → I) |
 | Recovery | 1/γ | 10 days | 1–30 days | Average recovery period (I → R) |
@@ -54,9 +54,12 @@ All numeric badges in the control panel are **clickable** — tap or click to ty
 - **Real-time canvas simulation** — agents walk, idle, and bounce off walls at 60 fps with pixel-art sprites
 - **5 animal types** — Sheep, Lamb, Piglet, Bull, Calf (visual only; does not affect model dynamics)
 - **Speed control** — 1×, 2×, 5× fast-forward affecting both visual movement and simulation time
+- **Canvas state overlays** — Paused overlay when simulation is frozen; Outbreak Ended overlay showing Attack Rate and Peak Infectious when the simulation completes, with a Clear button
+- **R₀ live display** — Basic Reproduction Number (β/γ) shown in the control panel, updates in real time as parameters change; color-coded red (spreading) or green (contained)
 - **Comparative Analysis page** — run up to 5 independent simulations with different parameters; overlay Infectious curves and peak infection bar chart
-- **Collapsible simulation blocks** — collapse individual blocks to save screen space
-- **Run All / Stop All** — start or stop every comparative simulation at once
+- **Collapsible simulation blocks** — collapse individual blocks to save screen space; header shows live Running/Paused/Done status badges
+- **Run All / Stop All / Clear All** — start or stop every comparative simulation at once; button label switches to Clear All automatically when all simulations finish
+- **How to Simulate guide** — step-by-step onboarding accessible via the book icon in the navbar; modal on desktop, vaul bottom drawer on mobile
 - **Responsive design** — desktop two-column layout, mobile bottom navigation with full-width controls
 - **Informational tooltips** — hover or tap the ⓘ icons next to parameter labels and SEIR counters for definitions
 - **Page transition animations** — slide-up fade-in when navigating between pages
@@ -74,6 +77,7 @@ All numeric badges in the control panel are **clickable** — tap or click to ty
 | Charts | Recharts 3 |
 | Tooltips | Radix UI Tooltip |
 | Icons | Lucide React |
+| Mobile Drawer | Vaul |
 | Sprites | Craftpix top-down farm pixel art |
 
 ---
@@ -121,7 +125,8 @@ src/
 │   └── layouts/
 │       ├── Navbar.tsx
 │       ├── BottomNav.tsx         # Mobile bottom navigation
-│       └── PageTransition.tsx    # Slide-up animation on route change
+│       ├── PageTransition.tsx    # Slide-up animation on route change
+│       └── HowToSimulate.tsx     # Step-by-step guide (modal desktop, vaul drawer mobile)
 └── modules/
     ├── simulation/
     │   ├── Simulation.tsx        # Main page state machine (idle/running/paused)
