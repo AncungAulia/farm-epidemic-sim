@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
-import { Play, Pause, Square, ChevronUp, ChevronDown } from "lucide-react";
+import { Play, Pause, Square, ChevronUp, ChevronDown, Check } from "lucide-react";
 import SimulationCanvas from "@/src/components/shared/SimulationCanvas";
 import ControlPanel from "@/src/components/shared/ControlPanel";
 import SEIRCounter from "@/src/components/elements/SEIRCounter";
@@ -31,6 +31,7 @@ interface SimBlockProps {
   color: string;
   onUpdate: (index: number, snapshots: SEIRSnapshot[], peakI: number) => void;
   onRemove: (index: number) => void;
+  onFinish?: (index: number, done: boolean) => void;
   startTrigger?: number;
   stopTrigger?: number;
   speed?: Speed;
@@ -43,6 +44,7 @@ export default function SimBlock({
   color,
   onUpdate,
   onRemove,
+  onFinish,
   startTrigger = 0,
   stopTrigger = 0,
   speed = 1,
@@ -50,6 +52,8 @@ export default function SimBlock({
   const [params, setParams] = useState<SimParams>({ ...DEFAULT_PARAMS, N: 100 });
   const [animal, setAnimal] = useState<AnimalType>('sheep');
   const [simState, setSimState] = useState<SimState>("idle");
+  const [finished, setFinished] = useState(false);
+  const [endStats, setEndStats] = useState<{ day: number; attackRate: number; peakI: number } | null>(null);
   const [collapsed, setCollapsed] = useState(false);
   const [day, setDay] = useState(0);
   const [counts, setCounts] = useState<{
@@ -99,6 +103,13 @@ export default function SimBlock({
       onUpdate(index, snapshotsRef.current, peakIRef.current);
 
       if (isOutbreakOver(agentsRef.current)) {
+        setFinished(true);
+        onFinish?.(index, true);
+        setEndStats({
+          day:        dayRef.current,
+          attackRate: Math.round((c.R / paramsRef.current.N) * 100),
+          peakI:      peakIRef.current,
+        });
         setSimState("idle");
         return;
       }
@@ -132,6 +143,9 @@ export default function SimBlock({
     peakIRef.current = paramsRef.current.I0;
     snapshotsRef.current = [{ day: 0, ...countSEIR(agentsRef.current) }];
     setDay(0);
+    setFinished(false);
+    setEndStats(null);
+    onFinish?.(index, false);
     setCounts(countSEIR(agentsRef.current));
     onUpdate(index, snapshotsRef.current, peakIRef.current);
     setSimState("running");
@@ -144,6 +158,9 @@ export default function SimBlock({
     cancelAnimationFrame(rafRef.current);
     agentsRef.current = [];
     dayRef.current = 0;
+    setFinished(false);
+    setEndStats(null);
+    onFinish?.(index, false);
     setSimState("idle");
     setDay(0);
     setCounts({ S: params.N - params.I0, E: 0, I: params.I0, R: 0 });
@@ -198,6 +215,22 @@ export default function SimBlock({
           >
             Simulation #{index + 1}
           </span>
+          {simState === 'running' && (
+            <span className="flex items-center gap-1 text-[10px] font-(family-name:--font-jetbrains-mono) uppercase tracking-widest" style={{ color: 'var(--seir-r)' }}>
+              <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: 'var(--seir-r)' }} />
+              Running
+            </span>
+          )}
+          {simState === 'paused' && (
+            <span className="flex items-center gap-1 text-[10px] font-(family-name:--font-jetbrains-mono) uppercase tracking-widest text-(--muted)">
+              <Pause size={10} /> Paused
+            </span>
+          )}
+          {finished && simState === 'idle' && (
+            <span className="flex items-center gap-1 text-[10px] font-(family-name:--font-jetbrains-mono) uppercase tracking-widest" style={{ color: 'var(--seir-r)' }}>
+              <Check size={10} /> Done
+            </span>
+          )}
         </div>
         <span className="font-(family-name:--font-jetbrains-mono) text-xs text-(--muted)">
           day {String(day).padStart(3, "0")} / n={params.N}
@@ -213,6 +246,9 @@ export default function SimBlock({
               canvasHeight={CANVAS_HEIGHT}
               dayRef={dayRef}
               animal={animal}
+              simState={simState}
+              endStats={endStats}
+              onClear={handleStop}
             />
             <ControlPanel
               params={params}
