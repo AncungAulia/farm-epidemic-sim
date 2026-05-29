@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { Play, Square } from 'lucide-react'
+import { Play, Square, RotateCcw } from 'lucide-react'
 import SimBlock      from './components/SimBlock'
 import CompareCharts from './components/CompareCharts'
 import Button        from '@/src/components/elements/Button'
@@ -24,12 +24,24 @@ interface BlockEntry {
 let nextId = 0
 
 export default function Compare() {
-  const [blocks, setBlocks]       = useState<BlockEntry[]>([{ id: nextId++ }])
-  const [results, setResults]     = useState<BlockResult[]>([])
-  const [startAll, setStartAll]   = useState(0)
-  const [stopAll,  setStopAll]    = useState(0)
-  const [speed, setSpeed]         = useState<Speed>(1)
-  const [removing, setRemoving]   = useState<Set<number>>(new Set())
+  const [blocks, setBlocks]         = useState<BlockEntry[]>([{ id: nextId++ }])
+  const [results, setResults]       = useState<BlockResult[]>([])
+  const [startAll, setStartAll]     = useState(0)
+  const [stopAll,  setStopAll]      = useState(0)
+  const [speed, setSpeed]           = useState<Speed>(1)
+  const [removing, setRemoving]     = useState<Set<number>>(new Set())
+  const [finishedSet, setFinishedSet] = useState<Set<number>>(new Set())
+
+  const allFinished = blocks.length > 0 && finishedSet.size === blocks.length
+
+  const handleFinish = useCallback((index: number, done: boolean) => {
+    setFinishedSet(prev => {
+      const next = new Set(prev)
+      if (done) next.add(index)
+      else next.delete(index)
+      return next
+    })
+  }, [])
 
   const handleUpdate = useCallback((index: number, snapshots: SEIRSnapshot[], peakI: number) => {
     setResults(prev => {
@@ -40,6 +52,7 @@ export default function Compare() {
 
   const handleRemove = useCallback((index: number) => {
     setRemoving(prev => new Set(prev).add(index))
+    setFinishedSet(prev => { const s = new Set(prev); s.delete(index); return s })
     setTimeout(() => {
       setBlocks(prev => prev.filter((_, i) => i !== index))
       setResults(prev => prev.filter(r => r.index !== index))
@@ -58,7 +71,7 @@ export default function Compare() {
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-5">
         <div>
-          <h1 className="text-xl font-bold text-(--text)">Comparative Analysis</h1>
+          <h1 className="text-xl font-bold text-(--text)">Compare</h1>
           <p className="text-sm text-(--muted) mt-1">
             Add multiple simulations with different parameters and compare the results.
           </p>
@@ -69,7 +82,7 @@ export default function Compare() {
           </div>
           <div className="flex gap-2">
             <Button className="flex-1 sm:flex-none" onClick={() => setStartAll(n => n + 1)}><Play size={14} /> Run All</Button>
-            <Button className="flex-1 sm:flex-none" variant="outline" onClick={() => setStopAll(n => n + 1)}><Square size={14} /> Stop All</Button>
+            <Button className="flex-1 sm:flex-none" variant="outline" onClick={() => setStopAll(n => n + 1)}>{allFinished ? <><RotateCcw size={14} /> Clear All</> : <><Square size={14} /> Stop All</>}</Button>
           </div>
         </div>
       </div>
@@ -83,6 +96,7 @@ export default function Compare() {
               color={COMPARE_BLOCK_COLORS[index % COMPARE_BLOCK_COLORS.length]}
               onUpdate={handleUpdate}
               onRemove={handleRemove}
+              onFinish={handleFinish}
               startTrigger={startAll}
               stopTrigger={stopAll}
               speed={speed}
