@@ -73,6 +73,9 @@
   overflow: hidden;
   min-height: 0;
 }
+.collapsible-grid[data-open="true"] > .collapsible-inner {
+  overflow: visible;
+}
 
 body {
   background: var(--bg);
