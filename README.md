@@ -1,4 +1,4 @@
-# Farm Epidemic Simulator
+# Farm Epidemic Simulator!
 
 An interactive, stochastic SEIR disease outbreak simulator for a closed farm ecosystem. Built as a final project for Teknik Pemodelan Stokastik (TPS), Semester 4.
 
